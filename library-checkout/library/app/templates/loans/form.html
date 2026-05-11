@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>도서 대출</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/loans/new">
+    <div class="form-group">
+      <label>회원 선택</label>
+      <select name="member_id" required>
+        <option value="">-- 회원을 선택하세요 --</option>
+        {% for member in members %}
+        <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>도서 선택 (대출 가능한 도서만 표시)</label>
+      <select name="book_id" required>
+        <option value="">-- 도서를 선택하세요 --</option>
+        {% for book in books %}
+        <option value="{{ book.id }}">{{ book.title }} - {{ book.author }}</option>
+        {% endfor %}
+      </select>
+      {% if not books %}
+      <p style="color:#999;font-size:0.85rem;margin-top:0.4rem;">현재 대출 가능한 도서가 없습니다.</p>
+      {% endif %}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit" {% if not books %}disabled{% endif %}>대출 신청</button>
+      <a class="btn btn-secondary" href="/loans/">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>대출 현황</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="toolbar">
+  <span></span>
+  <a class="btn btn-primary" href="/loans/new">+ 도서 대출</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>도서명</th><th>회원</th><th>대출일</th><th>반납일</th><th>상태</th><th>작업</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for loan in loans %}
+      <tr>
+        <td>{{ loan.id }}</td>
+        <td>{{ loan.book.title }}</td>
+        <td>{{ loan.member.name }}</td>
+        <td>{{ loan.loan_date }}</td>
+        <td>{{ loan.return_date if loan.return_date else "-" }}</td>
+        <td>
+          {% if loan.status.value == "ACTIVE" %}
+          <span class="badge badge-active">대출 중</span>
+          {% else %}
+          <span class="badge badge-returned">반납 완료</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if loan.status.value == "ACTIVE" %}
+          <form method="post" action="/loans/{{ loan.id }}/return" style="display:inline"
+                onsubmit="return confirm('반납 처리하시겠습니까?')">
+            <button class="btn btn-success" type="submit">반납</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align:center;color:#999;">대출 기록이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

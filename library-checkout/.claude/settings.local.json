@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/books/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/members/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/loans/)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/books/new -d 'title=파이썬+완벽가이드&author=마크+루츠&publisher=한빛미디어')",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/members/new -d 'name=홍길동&email=hong@test.com')",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/loans/new -d 'member_id=1&book_id=1')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:8000/loans/1/return)",
+      "Bash(curl -s http://localhost:8000/books/)",
+      "Bash(dot -V)",
+      "Bash(java -version)",
+      "Bash(pip show *)",
+      "Bash(.venv/bin/python generate_diagrams.py)",
+      "Bash(.venv/bin/python -c ' *)"
+    ]
+  }
+}

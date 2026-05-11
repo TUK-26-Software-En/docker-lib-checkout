@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>도서 목록</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="toolbar">
+  <form class="search-form" method="get" action="/books/">
+    <input type="text" name="keyword" placeholder="제목 또는 저자 검색" value="{{ keyword }}">
+    <button class="btn btn-secondary" type="submit">검색</button>
+    {% if keyword %}
+    <a class="btn btn-secondary" href="/books/">초기화</a>
+    {% endif %}
+  </form>
+  <a class="btn btn-primary" href="/books/new">+ 도서 등록</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>제목</th><th>저자</th><th>출판사</th><th>상태</th><th>작업</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for book in books %}
+      <tr>
+        <td>{{ book.id }}</td>
+        <td>{{ book.title }}</td>
+        <td>{{ book.author }}</td>
+        <td>{{ book.publisher }}</td>
+        <td>
+          {% if book.available %}
+          <span class="badge badge-available">대출 가능</span>
+          {% else %}
+          <span class="badge badge-unavailable">대출 중</span>
+          {% endif %}
+        </td>
+        <td>
+          <a class="btn btn-secondary" href="/books/{{ book.id }}/edit">수정</a>
+          <form method="post" action="/books/{{ book.id }}/delete" style="display:inline"
+                onsubmit="return confirm('정말 삭제하시겠습니까?')">
+            <button class="btn btn-danger" type="submit">삭제</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:#999;">등록된 도서가 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

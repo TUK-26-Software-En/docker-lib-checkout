@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>도서 대출 관리 시스템</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
+
+    nav {
+      background: #2c3e50;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 56px;
+    }
+    nav .brand { color: #ecf0f1; font-size: 1.1rem; font-weight: bold; text-decoration: none; }
+    nav a { color: #bdc3c7; text-decoration: none; font-size: 0.95rem; }
+    nav a:hover { color: #ecf0f1; }
+
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: #2c3e50; }
+    h2 { font-size: 1.2rem; margin-bottom: 1rem; color: #2c3e50; }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #f8f9fa; font-weight: 600; color: #555; }
+    tr:last-child td { border-bottom: none; }
+
+    .btn {
+      display: inline-block;
+      padding: 0.45rem 1rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-primary { background: #3498db; color: #fff; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-danger  { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .btn-success:hover { background: #219a52; }
+    .btn-secondary { background: #95a5a6; color: #fff; }
+    .btn-secondary:hover { background: #7f8c8d; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-available { background: #d4efdf; color: #1e8449; }
+    .badge-unavailable { background: #fadbd8; color: #922b21; }
+    .badge-active { background: #d6eaf8; color: #1a5276; }
+    .badge-returned { background: #eaecee; color: #566573; }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .search-form { display: flex; gap: 0.5rem; }
+    .search-form input { padding: 0.4rem 0.75rem; border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: #555; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 0.5rem 0.75rem;
+      border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem;
+    }
+    .form-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
+
+    .alert {
+      padding: 0.75rem 1rem; border-radius: 5px;
+      margin-bottom: 1rem; font-size: 0.9rem;
+    }
+    .alert-error { background: #fadbd8; color: #922b21; border: 1px solid #f1948a; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="brand" href="/">도서 대출 관리</a>
+    <a href="/books/">도서 관리</a>
+    <a href="/members/">회원 관리</a>
+    <a href="/loans/">대출 현황</a>
+    <a href="/health/ui" style="margin-left:auto;">헬스 체크</a>
+  </nav>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

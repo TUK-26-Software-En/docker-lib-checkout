@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>시스템 헬스 체크</h1>
+
+<div id="status-banner" class="card" style="border-left: 4px solid #bdc3c7; transition: border-color 0.3s;">
+  <p style="font-size:1.1rem; font-weight:600; color:#777;">상태 확인 중...</p>
+</div>
+
+<div class="card">
+  <h2>서비스 상태</h2>
+  <table id="services-table">
+    <thead>
+      <tr><th>서비스</th><th>상태</th><th>응답 지연 (ms)</th></tr>
+    </thead>
+    <tbody><tr><td colspan="3" style="color:#999; text-align:center;">로딩 중...</td></tr></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>시스템 통계</h2>
+  <table id="stats-table">
+    <thead>
+      <tr><th>항목</th><th>값</th></tr>
+    </thead>
+    <tbody><tr><td colspan="2" style="color:#999; text-align:center;">로딩 중...</td></tr></tbody>
+  </table>
+</div>
+
+<div style="margin-top:1rem; display:flex; gap:1rem; align-items:center;">
+  <button class="btn btn-primary" onclick="refresh()">새로고침</button>
+  <span id="last-updated" style="font-size:0.85rem; color:#777;"></span>
+  <span style="font-size:0.85rem; color:#aaa;">— 30초마다 자동 갱신</span>
+</div>
+
+<script>
+const STAT_LABELS = {
+  books_total: '전체 도서 수',
+  books_available: '대출 가능 도서',
+  members_total: '전체 회원 수',
+  active_loans: '진행 중 대출',
+};
+
+async function refresh() {
+  try {
+    const res = await fetch('/health', { method: 'POST' });
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('status-banner').style.borderLeftColor = '#e74c3c';
+    document.getElementById('status-banner').innerHTML =
+      '<p style="font-size:1.1rem;font-weight:600;color:#922b21;">서버에 연결할 수 없습니다.</p>';
+  }
+}
+
+function render(data) {
+  const healthy = data.status === 'healthy';
+  const banner = document.getElementById('status-banner');
+  banner.style.borderLeftColor = healthy ? '#27ae60' : '#e74c3c';
+  banner.innerHTML = `
+    <p style="font-size:1.1rem;font-weight:600;color:${healthy ? '#1e8449' : '#922b21'};">
+      ${healthy ? '정상 (healthy)' : '장애 (unhealthy)'}
+    </p>
+    <p style="font-size:0.85rem;color:#777;margin-top:0.4rem;">
+      업타임: ${data.uptime_seconds ?? '-'}초
+      &nbsp;|&nbsp;
+      측정 시각: ${data.timestamp ? new Date(data.timestamp).toLocaleString('ko-KR') : '-'}
+    </p>`;
+
+  const svcBody = document.querySelector('#services-table tbody');
+  svcBody.innerHTML = '';
+  for (const [name, info] of Object.entries(data.services ?? {})) {
+    const ok = info.status === 'healthy';
+    svcBody.innerHTML += `
+      <tr>
+        <td>${name}</td>
+        <td><span class="badge ${ok ? 'badge-available' : 'badge-unavailable'}">${info.status}</span></td>
+        <td>${info.latency_ms ?? '-'}</td>
+      </tr>`;
+  }
+  if (!svcBody.innerHTML) svcBody.innerHTML = '<tr><td colspan="3" style="color:#999;">데이터 없음</td></tr>';
+
+  const statsBody = document.querySelector('#stats-table tbody');
+  statsBody.innerHTML = '';
+  const stats = data.statistics ?? {};
+  for (const [key, label] of Object.entries(STAT_LABELS)) {
+    statsBody.innerHTML += `<tr><td>${label}</td><td><strong>${stats[key] ?? '-'}</strong></td></tr>`;
+  }
+
+  document.getElementById('last-updated').textContent =
+    `마지막 갱신: ${new Date().toLocaleTimeString('ko-KR')}`;
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+{% endblock %}

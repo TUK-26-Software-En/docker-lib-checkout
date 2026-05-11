@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>회원 목록</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="toolbar">
+  <span></span>
+  <a class="btn btn-primary" href="/members/new">+ 회원 등록</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>#</th><th>이름</th><th>이메일</th><th>작업</th></tr>
+    </thead>
+    <tbody>
+      {% for member in members %}
+      <tr>
+        <td>{{ member.id }}</td>
+        <td>{{ member.name }}</td>
+        <td>{{ member.email }}</td>
+        <td>
+          <form method="post" action="/members/{{ member.id }}/delete" style="display:inline"
+                onsubmit="return confirm('정말 삭제하시겠습니까?')">
+            <button class="btn btn-danger" type="submit">삭제</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center;color:#999;">등록된 회원이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

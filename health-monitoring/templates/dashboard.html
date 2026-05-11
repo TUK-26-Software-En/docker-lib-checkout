@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Health Monitor</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#333}
+
+    /* ── Nav ── */
+    nav{background:#1a252f;padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:56px}
+    nav .brand{color:#ecf0f1;font-size:1.05rem;font-weight:700;text-decoration:none}
+    nav .subtitle{color:#7f8c8d;font-size:.82rem}
+    nav .info{margin-left:auto;color:#7f8c8d;font-size:.8rem}
+
+    /* ── Layout ── */
+    .container{max-width:1100px;margin:1.5rem auto;padding:0 1rem}
+
+    /* ── Tabs ── */
+    .tab-nav{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid #dde}
+    .tab-btn{
+      padding:.65rem 1.5rem;border:none;background:none;cursor:pointer;
+      font-size:.9rem;font-weight:600;color:#7f8c8d;border-bottom:3px solid transparent;
+      margin-bottom:-2px;transition:color .15s,border-color .15s
+    }
+    .tab-btn:hover{color:#2c3e50}
+    .tab-btn.active{color:#2980b9;border-bottom-color:#2980b9}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+
+    /* ── Cards ── */
+    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:1.4rem;margin-bottom:1rem}
+    .card h2{font-size:1rem;color:#2c3e50;margin-bottom:1rem;font-weight:600}
+
+    /* ── Grid ── */
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem}
+    @media(max-width:800px){.grid-4{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+
+    /* ── Stat cards ── */
+    .stat-card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);
+      padding:1.1rem 1.3rem;border-left:4px solid #bdc3c7}
+    .stat-card .label{font-size:.75rem;color:#7f8c8d;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+    .stat-card .value{font-size:1.8rem;font-weight:700;margin-top:.2rem}
+
+    /* ── Metric cards (bigger) ── */
+    .metric-card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);
+      padding:1.3rem 1.4rem;border-top:4px solid #bdc3c7;text-align:center}
+    .metric-card .m-label{font-size:.75rem;color:#7f8c8d;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+    .metric-card .m-value{font-size:1.6rem;font-weight:700;margin:.3rem 0;color:#2c3e50}
+    .metric-card .m-sub{font-size:.75rem;color:#95a5a6}
+    .metric-card .m-def{font-size:.78rem;color:#7f8c8d;margin-top:.4rem;line-height:1.4}
+
+    /* ── Status indicator ── */
+    .status-wrap{display:flex;align-items:center;gap:.8rem}
+    .dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+    .dot-healthy{background:#27ae60;animation:pulse 2s infinite}
+    .dot-unhealthy{background:#e74c3c;animation:pulse 1s infinite}
+    .dot-warn{background:#f39c12}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .status-text{font-size:1.05rem;font-weight:700}
+    .status-detail{font-size:.82rem;color:#95a5a6;margin-top:.3rem}
+
+    /* ── Availability gauge ── */
+    .avail-wrap{text-align:center;padding:1rem 0}
+    .avail-number{font-size:3.5rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+    .avail-bar{background:#eee;border-radius:999px;height:14px;margin:.8rem auto;max-width:400px;overflow:hidden}
+    .avail-fill{height:100%;border-radius:999px;transition:width .6s ease,background .4s}
+    .avail-nines{font-size:.85rem;color:#7f8c8d;margin-top:.4rem}
+    .avail-formula{font-size:.85rem;color:#555;margin-top:.5rem;font-family:monospace;
+      background:#f8f9fa;padding:.4rem .8rem;border-radius:5px;display:inline-block}
+
+    /* ── Tables ── */
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid #f0f0f0;font-size:.855rem}
+    th{background:#f8f9fa;font-weight:600;color:#555;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+    tr:last-child td{border-bottom:none}
+
+    /* ── Badges ── */
+    .badge{display:inline-block;padding:.2rem .55rem;border-radius:20px;font-size:.72rem;font-weight:700}
+    .badge-healthy{background:#d4efdf;color:#1e8449}
+    .badge-unhealthy{background:#fadbd8;color:#922b21}
+    .badge-warn{background:#fdebd0;color:#784212}
+    .badge-ongoing{background:#d6eaf8;color:#1a5276}
+
+    /* ── Buttons ── */
+    .btn{display:inline-block;padding:.45rem 1.1rem;border-radius:6px;font-size:.875rem;
+      font-weight:600;border:none;cursor:pointer;transition:filter .15s}
+    .btn:hover{filter:brightness(.9)}
+    .btn-primary{background:#2980b9;color:#fff}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-success{background:#27ae60;color:#fff}
+    .btn-secondary{background:#95a5a6;color:#fff}
+    .btn-sm{padding:.3rem .75rem;font-size:.8rem}
+    .btn-group{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+
+    /* ── Toolbar ── */
+    .toolbar{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+    .last-updated{font-size:.8rem;color:#95a5a6}
+
+    /* ── Alert / message box ── */
+    .msg-box{padding:.7rem 1rem;border-radius:6px;font-size:.875rem;margin-top:1rem;display:none}
+    .msg-box.show{display:block}
+    .msg-success{background:#d4efdf;color:#1e8449;border:1px solid #a9dfbf}
+    .msg-error{background:#fadbd8;color:#922b21;border:1px solid #f1948a}
+    .msg-info{background:#d6eaf8;color:#1a5276;border:1px solid #a9cce3}
+
+    /* ── Fault injection panel ── */
+    .fault-control{display:flex;flex-direction:column;gap:1rem}
+    .fault-status-row{display:flex;align-items:center;gap:1rem;padding:1rem;
+      background:#f8f9fa;border-radius:8px}
+    .fault-desc{font-size:.85rem;color:#666;line-height:1.6;margin-top:.5rem}
+
+    /* ── Summary row ── */
+    .summary-row{display:flex;gap:2rem;flex-wrap:wrap;margin-top:.8rem}
+    .summary-item{font-size:.82rem;color:#7f8c8d}
+    .summary-item strong{color:#2c3e50}
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Health Monitor</span>
+  <span class="subtitle">도서관 시스템 모니터링</span>
+  <span class="info">{{ library_url }} &nbsp;|&nbsp; 폴링: {{ poll_interval }}s</span>
+</nav>
+
+<div class="container">
+
+  <!-- ── Tab Navigation ─────────────────────────────────── -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('status', this)">현황</button>
+    <button class="tab-btn" onclick="switchTab('fault', this)">장애 주입</button>
+    <button class="tab-btn" onclick="switchTab('metrics', this)">신뢰성 지표</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 1: 현황 (Status)
+       ════════════════════════════════════════════════════ -->
+  <div id="tab-status" class="tab-pane active">
+
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="loadStatus()">새로고침</button>
+      <span class="last-updated" id="status-updated"></span>
+      <span class="last-updated">— {{ poll_interval }}s 자동 갱신</span>
+    </div>
+
+    <!-- Status summary -->
+    <div class="card" id="status-card" style="border-left:4px solid #bdc3c7">
+      <div class="status-wrap">
+        <div class="dot dot-warn" id="status-dot"></div>
+        <span class="status-text" id="status-text" style="color:#777">연결 중...</span>
+      </div>
+      <p class="status-detail" id="status-detail"></p>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="grid-2">
+      <div class="stat-card"><div class="label">전체 도서</div><div class="value" id="s-books-total">-</div></div>
+      <div class="stat-card"><div class="label">대출 가능</div><div class="value" id="s-books-avail">-</div></div>
+      <div class="stat-card"><div class="label">전체 회원</div><div class="value" id="s-members">-</div></div>
+      <div class="stat-card"><div class="label">진행 중 대출</div><div class="value" id="s-loans">-</div></div>
+    </div>
+
+    <!-- Services table -->
+    <div class="card">
+      <h2>서비스 상태</h2>
+      <table>
+        <thead><tr><th>서비스</th><th>상태</th><th>응답 지연 (ms)</th><th>비고</th></tr></thead>
+        <tbody id="svc-body"><tr><td colspan="4" style="color:#999;text-align:center">로딩 중...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- History table -->
+    <div class="card">
+      <h2>최근 체크 이력</h2>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>#</th><th>시각</th><th>상태</th><th>DB 지연(ms)</th><th>업타임(s)</th></tr></thead>
+          <tbody id="hist-body"><tr><td colspan="5" style="color:#999;text-align:center">기록 없음</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 2: 장애 주입 (Fault Injection)
+       ════════════════════════════════════════════════════ -->
+  <div id="tab-fault" class="tab-pane">
+
+    <!-- Current fault status -->
+    <div class="card">
+      <h2>현재 장애 주입 상태</h2>
+      <div class="fault-status-row">
+        <div class="dot" id="fault-dot" style="background:#bdc3c7"></div>
+        <span style="font-size:1rem;font-weight:700" id="fault-status-text">확인 중...</span>
+      </div>
+      <p class="fault-desc" id="fault-status-desc"></p>
+    </div>
+
+    <!-- Controls -->
+    <div class="card">
+      <h2>장애 제어</h2>
+      <p class="fault-desc">
+        장애를 주입하면 <code>POST /health</code> 엔드포인트가 <strong>unhealthy</strong>를 반환하여
+        서비스 장애를 시뮬레이션합니다.<br>
+        health-monitoring은 이를 감지하여 장애 이벤트를 기록하고 신뢰성 지표를 갱신합니다.
+      </p>
+      <div class="btn-group">
+        <button class="btn btn-danger" onclick="doInject()">장애 주입 (Inject Fault)</button>
+        <button class="btn btn-success" onclick="doRecover()">시스템 복구 (Recover)</button>
+      </div>
+      <div class="msg-box" id="fault-msg"></div>
+    </div>
+
+    <!-- Immediate check result -->
+    <div class="card">
+      <h2>즉시 헬스 체크</h2>
+      <p class="fault-desc">장애 주입·복구 후 폴링 주기({{ poll_interval }}s)를 기다리지 않고 즉시 확인합니다.</p>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="doCheckNow()">지금 체크</button>
+        <span class="last-updated" id="check-now-time"></span>
+      </div>
+      <div class="msg-box" id="check-now-result"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 3: 신뢰성 지표 (Reliability Metrics)
+       ════════════════════════════════════════════════════ -->
+  <div id="tab-metrics" class="tab-pane">
+
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="loadMetrics()">새로고침</button>
+      <button class="btn btn-secondary btn-sm" onclick="doReset()" style="margin-left:.5rem">모니터링 초기화</button>
+      <span class="last-updated" id="metrics-updated"></span>
+    </div>
+
+    <!-- Availability display -->
+    <div class="card">
+      <h2>가용성 (Availability)</h2>
+      <div class="avail-wrap">
+        <div class="avail-number" id="avail-pct" style="color:#27ae60">-</div>
+        <div class="avail-bar"><div class="avail-fill" id="avail-fill" style="width:0%;background:#27ae60"></div></div>
+        <div class="avail-nines" id="avail-nines"></div>
+        <div class="avail-formula">A = MTTF / (MTTF + MTTR) = 가동 시간 / 전체 시간</div>
+      </div>
+    </div>
+
+    <!-- MTBF / MTTR / MTTF / Failures -->
+    <div class="grid-4">
+      <div class="metric-card" style="border-top-color:#2980b9">
+        <div class="m-label">MTBF</div>
+        <div class="m-value" id="mtbf-val">-</div>
+        <div class="m-sub" id="mtbf-sub"></div>
+        <div class="m-def">평균 장애 간격<br><em>MTTF + MTTR</em></div>
+      </div>
+      <div class="metric-card" style="border-top-color:#27ae60">
+        <div class="m-label">MTTF</div>
+        <div class="m-value" id="mttf-val">-</div>
+        <div class="m-sub" id="mttf-sub"></div>
+        <div class="m-def">평균 장애 발생까지 시간<br><em>복구→다음 장애</em></div>
+      </div>
+      <div class="metric-card" style="border-top-color:#e74c3c">
+        <div class="m-label">MTTR</div>
+        <div class="m-value" id="mttr-val">-</div>
+        <div class="m-sub" id="mttr-sub"></div>
+        <div class="m-def">평균 복구 시간<br><em>장애→복구 완료</em></div>
+      </div>
+      <div class="metric-card" style="border-top-color:#e67e22">
+        <div class="m-label">감지된 장애</div>
+        <div class="m-value" id="m-failures">0</div>
+        <div class="m-sub" id="m-cur-fail"></div>
+        <div class="m-def">총 장애 발생 횟수</div>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="card">
+      <h2>누적 통계</h2>
+      <div class="summary-row">
+        <div class="summary-item">모니터링 시작 <strong id="m-start">-</strong></div>
+        <div class="summary-item">총 관측 시간 <strong id="m-total">-</strong></div>
+        <div class="summary-item">총 가동 시간 <strong id="m-uptime">-</strong></div>
+        <div class="summary-item">총 중단 시간 <strong id="m-downtime">-</strong></div>
+      </div>
+    </div>
+
+    <!-- Failure events table -->
+    <div class="card">
+      <h2>장애 이벤트 이력</h2>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>장애 시작</th><th>복구 시각</th><th>지속 시간</th><th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="events-body">
+            <tr><td colspan="5" style="color:#999;text-align:center">장애 이벤트 없음</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-metrics -->
+
+</div><!-- /container -->
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtDur(sec) {
+  if (sec == null) return '-';
+  sec = Math.max(0, sec);
+  if (sec < 60)   return sec.toFixed(1) + 's';
+  if (sec < 3600) { const m=Math.floor(sec/60), s=Math.floor(sec%60); return `${m}m ${s}s`; }
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return `${h}h ${m}m`;
+}
+function fmtTime(iso) {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleString('ko-KR');
+}
+function fmtTimeSh(iso) {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleTimeString('ko-KR');
+}
+function badgeCls(s) {
+  if (s==='healthy') return 'badge-healthy';
+  if (s==='unhealthy') return 'badge-unhealthy';
+  return 'badge-warn';
+}
+function ninesLabel(pct) {
+  if (pct >= 99.999) return '5-nines (99.999%)';
+  if (pct >= 99.99)  return '4-nines (99.99%) — 연 52.6분 중단';
+  if (pct >= 99.9)   return '3-nines (99.9%) — 연 8.76시간 중단';
+  if (pct >= 99)     return '2-nines (99%) — 연 3.65일 중단';
+  if (pct >= 90)     return '1-nine (90%) — 연 36.5일 중단';
+  return '90% 미만';
+}
+function availColor(pct) {
+  if (pct >= 99.9) return '#27ae60';
+  if (pct >= 99)   return '#f39c12';
+  return '#e74c3c';
+}
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.className = `msg-box show msg-${type}`;
+  el.textContent = text;
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'fault')   { loadFaultStatus(); }
+  if (name === 'metrics') { loadMetrics(); }
+}
+
+// ════════════════════════════════════════════════
+// TAB 1: Status
+// ════════════════════════════════════════════════
+function renderStatus(data) {
+  const healthy = data.status === 'healthy';
+  const unreachable = ['unreachable','error','initializing'].includes(data.status);
+
+  const card = document.getElementById('status-card');
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const det  = document.getElementById('status-detail');
+
+  if (healthy) {
+    card.style.borderLeftColor = '#27ae60';
+    dot.className = 'dot dot-healthy';
+    text.style.color = '#1e8449';
+    text.textContent = '정상 (healthy)';
+  } else if (unreachable) {
+    card.style.borderLeftColor = '#f39c12';
+    dot.className = 'dot dot-warn';
+    text.style.color = '#784212';
+    text.textContent = '연결 불가 (' + data.status + ')';
+  } else {
+    card.style.borderLeftColor = '#e74c3c';
+    dot.className = 'dot dot-unhealthy';
+    text.style.color = '#922b21';
+    text.textContent = '장애 (unhealthy)';
+  }
+
+  const ts = data.timestamp ? new Date(data.timestamp).toLocaleString('ko-KR') : '-';
+  det.textContent = `업타임: ${data.uptime_seconds ?? '-'}s  |  측정: ${ts}`;
+  if (data.error) det.textContent += `  |  오류: ${data.error}`;
+
+  const stats = data.statistics ?? {};
+  document.getElementById('s-books-total').textContent = stats.books_total ?? '-';
+  document.getElementById('s-books-avail').textContent = stats.books_available ?? '-';
+  document.getElementById('s-members').textContent     = stats.members_total ?? '-';
+  document.getElementById('s-loans').textContent       = stats.active_loans ?? '-';
+
+  const svcBody = document.getElementById('svc-body');
+  svcBody.innerHTML = '';
+  for (const [name, info] of Object.entries(data.services ?? {})) {
+    const ok = info.status === 'healthy';
+    svcBody.innerHTML += `<tr>
+      <td>${name}</td>
+      <td><span class="badge ${badgeCls(info.status)}">${info.status}</span></td>
+      <td>${info.latency_ms ?? '-'}</td>
+      <td>${info.message ?? info.error ?? ''}</td>
+    </tr>`;
+  }
+  if (!svcBody.innerHTML) svcBody.innerHTML = '<tr><td colspan="4" style="color:#999">데이터 없음</td></tr>';
+
+  document.getElementById('status-updated').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
+}
+
+function renderHistory(items) {
+  const body = document.getElementById('hist-body');
+  if (!items.length) { body.innerHTML = '<tr><td colspan="5" style="color:#999;text-align:center">기록 없음</td></tr>'; return; }
+  body.innerHTML = '';
+  [...items].reverse().forEach((item, idx) => {
+    const t = item._checked_at ? new Date(item._checked_at).toLocaleTimeString('ko-KR') : '-';
+    body.innerHTML += `<tr>
+      <td>${items.length - idx}</td>
+      <td>${t}</td>
+      <td><span class="badge ${badgeCls(item.status)}">${item.status}</span></td>
+      <td>${item.services?.database?.latency_ms ?? '-'}</td>
+      <td>${item.uptime_seconds ?? '-'}</td>
+    </tr>`;
+  });
+}
+
+async function loadStatus() {
+  try {
+    const [sr, hr] = await Promise.all([fetch('/api/status'), fetch('/api/history')]);
+    renderStatus(await sr.json());
+    renderHistory(await hr.json());
+  } catch(e) {
+    document.getElementById('status-text').textContent = '모니터링 오류';
+  }
+}
+
+// ════════════════════════════════════════════════
+// TAB 2: Fault Injection
+// ════════════════════════════════════════════════
+async function loadFaultStatus() {
+  try {
+    const r = await fetch('/api/fault/status');
+    const d = await r.json();
+    renderFaultStatus(d.fault_active);
+  } catch(e) {
+    renderFaultStatus(null);
+  }
+}
+
+function renderFaultStatus(active) {
+  const dot  = document.getElementById('fault-dot');
+  const text = document.getElementById('fault-status-text');
+  const desc = document.getElementById('fault-status-desc');
+  if (active === true) {
+    dot.className = 'dot dot-unhealthy';
+    text.style.color = '#922b21';
+    text.textContent = '장애 주입 활성화';
+    desc.textContent = '/health 엔드포인트가 unhealthy를 반환하고 있습니다. health-monitoring이 이를 감지하여 장애 이벤트를 기록합니다.';
+  } else if (active === false) {
+    dot.className = 'dot dot-healthy';
+    text.style.color = '#1e8449';
+    text.textContent = '정상 (장애 없음)';
+    desc.textContent = '시스템이 정상적으로 운영 중입니다.';
+  } else {
+    dot.style.background = '#bdc3c7';
+    text.style.color = '#7f8c8d';
+    text.textContent = '상태 확인 불가';
+    desc.textContent = 'library-checkout에 연결할 수 없습니다.';
+  }
+}
+
+async function doInject() {
+  try {
+    const r = await fetch('/api/fault/inject', {method:'POST'});
+    const d = await r.json();
+    showMsg('fault-msg', '✓ ' + (d.message ?? '장애 주입됨'), 'error');
+    loadFaultStatus();
+  } catch(e) {
+    showMsg('fault-msg', '오류: ' + e.message, 'error');
+  }
+}
+
+async function doRecover() {
+  try {
+    const r = await fetch('/api/fault/recover', {method:'POST'});
+    const d = await r.json();
+    showMsg('fault-msg', '✓ ' + (d.message ?? '복구됨'), 'success');
+    loadFaultStatus();
+  } catch(e) {
+    showMsg('fault-msg', '오류: ' + e.message, 'error');
+  }
+}
+
+async function doCheckNow() {
+  try {
+    const r = await fetch('/api/check/now', {method:'POST'});
+    const d = await r.json();
+    const healthy = d.status === 'healthy';
+    showMsg('check-now-result',
+      `상태: ${d.status}  |  측정: ${d.timestamp ? new Date(d.timestamp).toLocaleTimeString('ko-KR') : '-'}`,
+      healthy ? 'success' : 'error');
+    document.getElementById('check-now-time').textContent = new Date().toLocaleTimeString('ko-KR');
+    // Also refresh status tab in background
+    loadStatus();
+  } catch(e) {
+    showMsg('check-now-result', '오류: ' + e.message, 'error');
+  }
+}
+
+// ════════════════════════════════════════════════
+// TAB 3: Reliability Metrics
+// ════════════════════════════════════════════════
+function renderMetrics(m) {
+  if (!m || m.status === 'not_started') {
+    document.getElementById('avail-pct').textContent = '-';
+    return;
+  }
+
+  // Availability
+  const pct = m.availability_percent ?? 100;
+  const color = availColor(pct);
+  const pctEl = document.getElementById('avail-pct');
+  pctEl.textContent = pct.toFixed(4) + '%';
+  pctEl.style.color = color;
+  const fill = document.getElementById('avail-fill');
+  fill.style.width = Math.min(100, pct) + '%';
+  fill.style.background = color;
+  document.getElementById('avail-nines').textContent = ninesLabel(pct);
+
+  // MTBF / MTTF / MTTR
+  document.getElementById('mtbf-val').textContent = fmtDur(m.mtbf_seconds);
+  document.getElementById('mtbf-sub').textContent = m.mtbf_seconds != null ? m.mtbf_seconds + 's' : '';
+  document.getElementById('mttf-val').textContent = fmtDur(m.mttf_seconds);
+  document.getElementById('mttf-sub').textContent = m.mttf_seconds != null ? m.mttf_seconds + 's' : '';
+  document.getElementById('mttr-val').textContent = fmtDur(m.mttr_seconds);
+  document.getElementById('mttr-sub').textContent = m.mttr_seconds != null ? m.mttr_seconds + 's' : '';
+
+  // Failure count
+  document.getElementById('m-failures').textContent = m.failure_count ?? 0;
+  const curDur = m.current_failure_duration_seconds;
+  document.getElementById('m-cur-fail').textContent =
+    m.is_currently_failing ? `현재 장애 중 ${fmtDur(curDur)}` : (m.failure_count > 0 ? '현재 정상' : '');
+
+  // Summary
+  document.getElementById('m-start').textContent   = fmtTime(m.monitoring_started_at);
+  document.getElementById('m-total').textContent   = fmtDur(m.total_time_seconds);
+  document.getElementById('m-uptime').textContent  = fmtDur(m.total_uptime_seconds);
+  document.getElementById('m-downtime').textContent= fmtDur(m.total_downtime_seconds);
+
+  // Failure events
+  const body = document.getElementById('events-body');
+  const events = m.failure_events ?? [];
+  if (!events.length) {
+    body.innerHTML = '<tr><td colspan="5" style="color:#999;text-align:center">장애 이벤트 없음</td></tr>';
+    return;
+  }
+  body.innerHTML = '';
+  [...events].reverse().forEach(ev => {
+    const ongoing = !ev.recovered_at;
+    body.innerHTML += `<tr>
+      <td>${ev.id}</td>
+      <td>${fmtTime(ev.started_at)}</td>
+      <td>${ev.recovered_at ? fmtTime(ev.recovered_at) : '<span style="color:#e74c3c">진행 중</span>'}</td>
+      <td>${ev.duration_seconds != null ? fmtDur(ev.duration_seconds) : (ongoing ? '<span style="color:#e74c3c">-</span>' : '-')}</td>
+      <td>${ongoing ? '<span class="badge badge-unhealthy">장애 중</span>' : '<span class="badge badge-healthy">복구됨</span>'}</td>
+    </tr>`;
+  });
+
+  document.getElementById('metrics-updated').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
+}
+
+async function loadMetrics() {
+  try {
+    const r = await fetch('/api/metrics');
+    renderMetrics(await r.json());
+  } catch(e) {
+    console.error('metrics fetch error', e);
+  }
+}
+
+async function doReset() {
+  if (!confirm('모니터링 데이터(장애 이력, 통계)를 초기화하시겠습니까?')) return;
+  try {
+    const r = await fetch('/api/monitoring/reset', {method:'POST'});
+    const d = await r.json();
+    alert(d.message);
+    loadMetrics();
+  } catch(e) {
+    alert('초기화 실패: ' + e.message);
+  }
+}
+
+// ── Auto-refresh ──────────────────────────────────────────────────────────────
+loadStatus();
+setInterval(loadStatus,  {{ poll_interval }} * 1000);
+// Metrics refresh every 5 s (shows live failure duration)
+setInterval(() => {
+  if (document.getElementById('tab-metrics').classList.contains('active')) loadMetrics();
+}, 5000);
+// Fault status refresh on fault tab
+setInterval(() => {
+  if (document.getElementById('tab-fault').classList.contains('active')) loadFaultStatus();
+}, 10000);
+</script>
+</body>
+</html>
