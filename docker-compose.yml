@@ -37,8 +37,8 @@ services:
     ports:
       - "${LIBRARY_PORT}:8000"
     depends_on:
-      - postgres #:
-        # condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - library-net
     healthcheck:
@@ -59,8 +59,8 @@ services:
     ports:
       - "${MONITOR_PORT}:8001"
     depends_on:
-      - library-checkout #:
-        # condition: service_healthy
+      library-checkout:
+        condition: service_healthy
     networks:
       - library-net
 
